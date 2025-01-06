@@ -27,10 +27,11 @@ docker build -t thesis_rag_admin .
 
 **Run the docker image py passing the env variables**
 
-docker run  --env=EMBEDDING_MODEL=mxbai-embed-large --env=OLLAMA_HOST=192.168.0.27:11434 --env=CHROMADB_HTTPS_ADDRESS=192.168.0.27 --env=CHROMADB_PORT=8000 --env=CHROMADB_COLLECTION=scientific_papers   -p 8502:8502 -d thesis_rag_admin:latest
+docker run  --env=EMBEDDING_MODEL=mxbai-embed-large --env=OLLAMA_HOST=http://192.168.0.27:11434 --env=CHROMADB_HTTPS_ADDRESS=192.168.0.27 --env=CHROMADB_PORT=8000 --env=CHROMADB_COLLECTION=scientific_papers  -p 8502:8502 -d thesis_rag_admin:latest
+
 
 **Prequisites**
 - Make sure to set OLLAMA_HOST environment variable to 0.0.0.0, otherwise the dockercontainer will not be able to access the ollama service
-- Make sure that you are running version 0.6.2 of ChromaDB. There have been compatability issues between 0.6.2 and older chromadb Python libraries. [Guide to installing Chroma as a Docker Container](https://docs.trychroma.com/production/containers/docker)
+- Make sure that you are running version 0.5.23 of ChromaDB. There have been compatability issues between newer versions and older chromadb Python libraries. [Guide to installing Chroma as a Docker Container](https://docs.trychroma.com/production/containers/docker)
 
 
