@@ -7,9 +7,17 @@ import chromadb
 import streamlit as st
 import os
 import tempfile
+import pandas as pd
 from io import BytesIO
 
-
+#Provide Environment Variables
+load_dotenv()
+CHROMADB_HTTPS_ADDRESS=os.getenv('CHROMADB_HTTPS_ADDRESS')
+CHROMADB_PORT=os.getenv('CHROMADB_PORT')
+CHROMADB_COLLECTION=os.getenv('CHROMADB_COLLECTION')
+EMBEDDING_MODEL=os.getenv('EMBEDDING_MODEL')
+OLLAMA_HOST=os.getenv('OLLAMA_HOST')
+SELECTABLE_TOPICS="Learning Theories and Technologies,Intelligent Tutoring Systems,Student Modeling,Collaborative Learning,Artificial Intelligence in Education".split(sep=",")
 
 
 def get_collection(client,collection_name:str) -> chromadb.Collection:
@@ -27,22 +35,11 @@ def get_metadata(collection:chromadb.Collection,metadata_field:str) ->list:
         pass
     return doc_titles
 
-def init_session_sate_variables(st_key:str,default:any)->None:
+def init_session_state_variables(st_key:str,default:any)->None:
     if st_key not in st.session_state:
         st.session_state[st_key] = default
 
-initial_session_states = {"select_chunk_size":250,"select_chunk_overlap":25,"selected_topic":"MOOC"}
-
-#Provide Environment Variables
-load_dotenv()
-CHROMADB_HTTPS_ADDRESS=os.getenv('CHROMADB_HTTPS_ADDRESS')
-CHROMADB_PORT=os.getenv('CHROMADB_PORT')
-CHROMADB_COLLECTION=os.getenv('CHROMADB_COLLECTION')
-EMBEDDING_MODEL=os.getenv('EMBEDDING_MODEL')
-OPENAI_API_KEY=os.getenv('OPENAI_API_KEY')
-OLLAMA_HOST=os.getenv('OLLAMA_HOST')
-
-
+initial_session_states = {"select_chunk_size":500,"select_chunk_overlap":50,"selected_topic":SELECTABLE_TOPICS[0]}
 
 
 def main():
@@ -66,23 +63,18 @@ def main():
     st.header("	:coffee: Administer the RAG :coffee:")
     
     for key, value in initial_session_states.items():
-        init_session_sate_variables(st_key=key,default=value)
-
+        init_session_state_variables(st_key=key,default=value)
     
-    with st.container():
-        col_chunk_size, col_chunk_overlap = st.columns(2)
-        with col_chunk_size:
-            st.metric(label="Applied Chunk Size",value=st.session_state.select_chunk_size)
-        with col_chunk_overlap:
-            st.metric(label="Applied Chunk Overlap",value=st.session_state.select_chunk_overlap)
+    env_var_summary_data = {"Parameters": ["OLLAMA_HOST","EMBEDDING_MODEL","CHROMADB_HTTPS_ADDRESS","CHROMADB_PORT","CHROMADB_COLLECTION","Chunk Size", "Chunk Overlap"],"Values":[OLLAMA_HOST,EMBEDDING_MODEL,CHROMADB_HTTPS_ADDRESS,CHROMADB_PORT,CHROMADB_COLLECTION,st.session_state.select_chunk_size,st.session_state.select_chunk_overlap]} 
 
-    st.selectbox(label="Select Topic to assign the documents to",options=["MOOC","Course Documents","Generative AI"],key="selected_topic",placeholder="MOOC")
+
+    st.selectbox(label="Select Topic to assign the documents to",options=SELECTABLE_TOPICS,key="selected_topic")
     
 
     uploaded_files = st.file_uploader("Upload PDFs you want to add to the indexing",type=['pdf','pptx','docx'],key="files_to_upload",accept_multiple_files=True)
     
-    selected_chunk_size = st.number_input(label="Enter the Chunk Size with which you want to verctorize your Documents",key="select_chunk_size",step=10,placeholder=250)
-    selected_chunk_overlap = st.number_input(label="Enter the Chunk Overlap with which you want to verctorize your Documents",key="select_chunk_overlap",step=10,placeholder=25)
+    #selected_chunk_size = st.number_input(label="Enter the Chunk Size with which you want to verctorize your Documents",key="select_chunk_size",step=10,placeholder=250)
+    #selected_chunk_overlap = st.number_input(label="Enter the Chunk Overlap with which you want to verctorize your Documents",key="select_chunk_overlap",step=10,placeholder=25)
 
     if st.button(label="Upload files to Vector Store",use_container_width=True):
         chunk = chunker(ChunkSize=st.session_state.select_chunk_size,ChunkOverlap=st.session_state.select_chunk_overlap)
@@ -142,6 +134,9 @@ def main():
     if st.button(label="Delete All Documents from the Vector Store",use_container_width=True):
         with st.spinner(":male-factory-worker: Processing"):
             chroma_client.delete_collection(collection_name)
+    
+    st.write("Parameters set for the running application")
+    st.table(pd.DataFrame.from_dict(env_var_summary_data))
     
     
 
