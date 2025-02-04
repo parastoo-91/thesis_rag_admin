@@ -28,10 +28,10 @@ services:
       CHROMADB_HTTPS_ADDRESS: 192.168.0.27
       CHROMADB_PORT: 8000
       CHROMADB_COLLECTION: scientific_papers
-      RETRIEVER_K_NUMBER: 20
-      RETRIEVER_RELEVANCE_SCORE: 0.4
-      LLM_MODEL: llama3.2:3b
-      RERANKER_MODEL: qwen2.5:7b
+      RETRIEVER_K_NUMBER: 30
+      RETRIEVER_RELEVANCE_SCORE: 0.2
+      LLM_MODEL: deepseek-r1:8b
+      RERANKER_MODEL: qwen2.5:3b
 
 
 
