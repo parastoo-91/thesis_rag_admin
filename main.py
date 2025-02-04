@@ -39,8 +39,7 @@ def init_session_state_variables(st_key:str,default:any)->None:
     if st_key not in st.session_state:
         st.session_state[st_key] = default
 
-initial_session_states = {"select_chunk_size":500,"select_chunk_overlap":50,"selected_topic":SELECTABLE_TOPICS[0]}
-
+initial_session_states = {"select_chunk_size":1500,"select_chunk_overlap":150,"selected_topic":SELECTABLE_TOPICS[0]}
 
 def main():
     
@@ -73,8 +72,8 @@ def main():
 
     uploaded_files = st.file_uploader("Upload PDFs you want to add to the indexing",type=['pdf','pptx','docx'],key="files_to_upload",accept_multiple_files=True)
     
-    #selected_chunk_size = st.number_input(label="Enter the Chunk Size with which you want to verctorize your Documents",key="select_chunk_size",step=10,placeholder=250)
-    #selected_chunk_overlap = st.number_input(label="Enter the Chunk Overlap with which you want to verctorize your Documents",key="select_chunk_overlap",step=10,placeholder=25)
+    # selected_chunk_size = st.number_input(label="Enter the Chunk Size with which you want to verctorize your Documents",key="select_chunk_size",step=10,placeholder=250)
+    # selected_chunk_overlap = st.number_input(label="Enter the Chunk Overlap with which you want to verctorize your Documents",key="select_chunk_overlap",step=10,placeholder=25)
 
     if st.button(label="Upload files to Vector Store",use_container_width=True):
         chunk = chunker(ChunkSize=st.session_state.select_chunk_size,ChunkOverlap=st.session_state.select_chunk_overlap)

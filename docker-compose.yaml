@@ -31,6 +31,7 @@ services:
       RETRIEVER_K_NUMBER: 20
       RETRIEVER_RELEVANCE_SCORE: 0.4
       LLM_MODEL: llama3.2:3b
+      RERANKER_MODEL: qwen2.5:7b
 
 
 
