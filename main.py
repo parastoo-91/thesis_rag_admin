@@ -9,6 +9,7 @@ import os
 import tempfile
 import pandas as pd
 from io import BytesIO
+from chromadb.config import Settings
 
 #Provide Environment Variables
 load_dotenv()
@@ -46,7 +47,8 @@ def main():
 
     chroma_client = chromadb.HttpClient(
         host=CHROMADB_HTTPS_ADDRESS,
-        port=CHROMADB_PORT
+        port=CHROMADB_PORT,
+        settings=Settings(allow_reset=True, anonymized_telemetry=False)
         )
     
     embeddings = OllamaEmbeddings(

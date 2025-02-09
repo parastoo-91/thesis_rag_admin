@@ -1,20 +1,71 @@
 version: "3"
+
+networks:
+  rag_network:
+    ipam:
+      config:
+    #subnet defines the IP adresses. There was an issue when using "chroma" for the  CHROMADB_HTTPS_ADDRESS env variable. Hence we are assigning it explicitly
+        - subnet: 172.20.0.0/24
+
 services:
   chroma:
     image: chromadb/chroma:0.5.23
     ports:
       - "8000:8000"
+    networks:
+      rag_network:
+    #Explicit assignment of IP 
+        ipv4_address: 172.20.0.5
+    # healthcheck: 
+    #   test: curl 172.20.0.5:8000/api/v1/heartbeat || exit 1
+    #   interval: 10s
+    #   retries: 2
+    #   start_period: 5s
+    #   timeout: 10s
+
+  ollama:
+  # Can be further enhance by setting it up with GPU passthrough.
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+    volumes:
+      - .:/code
+    # Mounts volumne so that the models are not installed inside the container but outside
+      - ./ollama/ollama:/root/.ollama
+    #Makes entrypoint.sh available inside the container
+      - ./entrypoint.sh:/entrypoint.sh
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    #Needed so that Ollama is accessible within the local network
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      rag_network:
+    #Explicit assignment of IP 
+        ipv4_address: 172.20.0.6
+    #!!!When changing models, check the entrypoint.sh script and replace your desired models in the pull commands with the same ones you defined in the envrionment variables of the indivdual services in this docker compose yaml
+    entrypoint: ["/usr/bin/bash", "/entrypoint.sh"]
+    
+
   rag_admin_app:
     image: thesis_rag_admin:latest
     ports:
       - "8502:8502"
     environment:
       EMBEDDING_MODEL: mxbai-embed-large
-      OLLAMA_HOST: http://192.168.0.27:11434
-      CHROMADB_HTTPS_ADDRESS: 192.168.0.27
+      OLLAMA_HOST: http://172.20.0.6:11434
+      CHROMADB_HTTPS_ADDRESS: 172.20.0.5
       CHROMADB_PORT: 8000
       CHROMADB_COLLECTION: scientific_papers
-  rag_chat_app:
+    depends_on:
+      - chroma
+    networks:
+      - rag_network
+
+  chat_app:
     image: rag_thesis:latest
     ports:
       - "8504:8504"
@@ -24,14 +75,24 @@ services:
         target: /thesis_rag/logs
     environment:
       EMBEDDING_MODEL: mxbai-embed-large
-      OLLAMA_HOST: http://192.168.0.27:11434
-      CHROMADB_HTTPS_ADDRESS: 192.168.0.27
+      OLLAMA_HOST: http://172.20.0.6:11434
+      CHROMADB_HTTPS_ADDRESS: 172.20.0.5
       CHROMADB_PORT: 8000
       CHROMADB_COLLECTION: scientific_papers
       RETRIEVER_K_NUMBER: 30
       RETRIEVER_RELEVANCE_SCORE: 0.2
-      LLM_MODEL: deepseek-r1:8b
+    # Enreusre that desired models are pulled in the entrypoint.sh! 
+      LLM_MODEL: deepseek-r1:1.5b
       RERANKER_MODEL: qwen2.5:3b
+    depends_on:
+      - chroma
+      - rag_admin_app
+    networks:
+      - rag_network
+
+
+
+
 
 
 
